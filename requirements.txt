@@ -4,4 +4,4 @@ requests
 python-dotenv
 pdfplumber
 python-docx
-win32com
+striprtf
