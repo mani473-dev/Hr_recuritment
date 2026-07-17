@@ -4,7 +4,7 @@ import os
 import tempfile
 import requests
 import pdfplumber
-
+import win32com.client
 from dotenv import load_dotenv
 from requests.auth import HTTPBasicAuth
 
@@ -172,50 +172,31 @@ def extract_pdf(file_bytes):
 
 
 
+
+
 def extract_doc(file_bytes):
 
     with tempfile.TemporaryDirectory() as temp:
 
+        doc_path = os.path.join(temp, "resume.doc")
+        docx_path = os.path.join(temp, "resume.docx")
 
-        doc_path = os.path.join(
-            temp,
-            "resume.doc"
-        )
-
-
-        with open(
-            doc_path,
-            "wb"
-        ) as f:
-
+        with open(doc_path, "wb") as f:
             f.write(file_bytes)
 
+        word = win32com.client.Dispatch("Word.Application")
+        word.Visible = False
 
+        try:
+            document = word.Documents.Open(doc_path)
+            document.SaveAs(docx_path, FileFormat=16)
+            document.Close()
 
-        os.system(
-            f"libreoffice --headless "
-            f"--convert-to docx "
-            f"{doc_path} "
-            f"--outdir {temp}"
-        )
+        finally:
+            word.Quit()
 
-
-
-        docx_path = os.path.join(
-            temp,
-            "resume.docx"
-        )
-
-
-
-        with open(
-            docx_path,
-            "rb"
-        ) as f:
-
-            return extract_docx(
-                f.read()
-            )
+        with open(docx_path, "rb") as f:
+            return extract_docx(f.read())
 
 
 
